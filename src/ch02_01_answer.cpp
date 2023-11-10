@@ -68,7 +68,8 @@ void render()
 	// 삼각형 그리기
 	glUseProgram(shaderProgram); // 어떤 셰이더 프로그램 사용할지 선택
 	glBindVertexArray(VAO); // 버텍스 어레이 선택
-	glDrawArrays(GL_TRIANGLES, 0, 3); // 드로우 콜
+	//glDrawArrays(GL_TRIANGLES, 0, 3); // 드로우 콜
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 void update()
@@ -78,6 +79,10 @@ void update()
 		-0.9f, -0.5f, 0.0f,  // left 
 		-0.0f, -0.5f, 0.0f,  // right
 		-0.45f, 0.5f, 0.0f,  // top 
+		// second triangle
+		 0.0f, -0.5f, 0.0f,  // left
+		 0.9f, -0.5f, 0.0f,  // right
+		 0.45f, 0.5f, 0.0f   // top 
 	};
 
 	unsigned int VBO;

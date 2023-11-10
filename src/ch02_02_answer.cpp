@@ -7,7 +7,7 @@ const int WINDOW_WIDTH  = 1024;
 const int WINDOW_HEIGHT = 768;
 
 unsigned int shaderProgram;
-unsigned int VAO;
+unsigned int VBOs[2], VAOs[2];
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -67,25 +67,43 @@ void render()
 
 	// 삼각형 그리기
 	glUseProgram(shaderProgram); // 어떤 셰이더 프로그램 사용할지 선택
-	glBindVertexArray(VAO); // 버텍스 어레이 선택
-	glDrawArrays(GL_TRIANGLES, 0, 3); // 드로우 콜
+	glBindVertexArray(VAOs[0]);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	// then we draw the second triangle using the data from the second VAO
+	glBindVertexArray(VAOs[1]);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void update()
 {
-	float vertices[] = {
-		// first triangle
+	float firstTriangle[] = {
 		-0.9f, -0.5f, 0.0f,  // left 
 		-0.0f, -0.5f, 0.0f,  // right
 		-0.45f, 0.5f, 0.0f,  // top 
 	};
+	float secondTriangle[] = {
+		0.0f, -0.5f, 0.0f,  // left
+		0.9f, -0.5f, 0.0f,  // right
+		0.45f, 0.5f, 0.0f   // top 
+	};
 
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-
-	// GL_ARRAY_BUFFER : 버텍스 특성을 담는 버퍼.
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // (종류, 버퍼크기, 포인터 주소, 옵션)
+	glGenVertexArrays(2, VAOs); // we can also generate multiple VAOs or buffers at the same time
+	glGenBuffers(2, VBOs);
+	// first triangle setup
+	// --------------------
+	glBindVertexArray(VAOs[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);	// Vertex attributes stay the same
+	glEnableVertexAttribArray(0);
+	// glBindVertexArray(0); // no need to unbind at all as we directly bind a different VAO the next few lines
+	// second triangle setup
+	// ---------------------
+	glBindVertexArray(VAOs[1]);	// note that we bind to a different VAO now
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);	// and a different VBO
+	glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0); // because the vertex data is tightly packed we can also specify 0 as the vertex attribute's stride to let OpenGL figure it out
+	glEnableVertexAttribArray(0);
 
 
 	// 파일 로드 형식으로 변경 예정
@@ -122,13 +140,6 @@ void update()
 	glLinkProgram(shaderProgram);
 
 	glUseProgram(shaderProgram);
-
-	// Vertex Array Object 만들고, 바인딩
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	// Vertex attributes pointer 세팅하기
-	// => 아까 세팅한 VBO를 어떻게 해석할지 정의.
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
