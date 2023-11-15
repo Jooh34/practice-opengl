@@ -98,8 +98,8 @@ int loadContent()
     shader->setUniform3fv("cam_pos", cam_position);
 
     texture = new Texture();
-    texture->load("res/models/alliance.png");
-    texture->bind();
+	texture->load("res/models/alliance.png");
+	texture->bind();
 
     return true;
 }

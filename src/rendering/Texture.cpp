@@ -11,6 +11,7 @@
 Texture::Texture()
     : use_linear(true), to_id(0)
 {
+    stbi_set_flip_vertically_on_load(true);
 }
 
 Texture::~Texture()
