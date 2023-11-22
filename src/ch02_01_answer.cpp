@@ -52,10 +52,6 @@ int init()
         return -1;
     }
 
-    /* Set the viewport */
-    glClearColor(0.6784f, 0.8f, 1.0f, 1.0f);
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
     return true;
 }
 

@@ -13,23 +13,56 @@
 #include "rendering/Shader.h"
 #include "rendering/Texture.h"
 #include "rendering/Model.h"
+#include "rendering/Camera.h"
 
 GLFWwindow* window;
 const int WINDOW_WIDTH  = 1024;
 const int WINDOW_HEIGHT = 768;
+float lastX = WINDOW_WIDTH / 2.0;
+float lastY = WINDOW_HEIGHT / 2.0;
+bool firstMouse = true;
 
 Model   * mesh    = nullptr;
 Shader  * shader  = nullptr;
 Texture * texture = nullptr;
-
-/* Matrices */
-glm::vec3 cam_position = glm::vec3(0.0f, 1.0f, 1.2f);
-glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.5f, 0.0f);
-glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
+Camera* camera = nullptr;
 
 glm::mat4 world_matrix      = glm::mat4(1.0f);
-glm::mat4 view_matrix       = glm::lookAt(cam_position, cam_look_at, cam_up);
 glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 10.0f);
+
+void processInput(GLFWwindow* window, float deltaTime)
+{
+    if (camera)
+    {
+        camera->processInput(window, deltaTime);
+    }
+
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos_in, double ypos_in)
+{
+	float xpos = static_cast<float>(xpos_in);
+	float ypos = static_cast<float>(ypos_in);
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+
+	if (camera)
+	{
+		camera->processMouseMovement(xoffset, yoffset);
+	}
+}
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -38,7 +71,7 @@ void window_size_callback(GLFWwindow* window, int width, int height)
 
     if (shader != nullptr)
     {
-        shader->setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
+        shader->setUniformMatrix4fv("viewProj", projection_matrix * camera->getViewMatrix());
     }
 }
 
@@ -79,12 +112,17 @@ int init()
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     glEnable(GL_DEPTH_TEST);
-
+    
+    // mouse focus
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // mouse callback
+    glfwSetCursorPosCallback(window, mouse_callback);
     return true;
 }
 
 int loadContent()
 {
+    camera = new Camera(glm::vec3(0.0f, 0.0f, 1.f), glm::vec3(0.0f, 1.0f, 0.0f));
     mesh = new Model("res/models/alliance.obj");
 
     /* Create and apply basic shader */
@@ -93,13 +131,14 @@ int loadContent()
 
     shader->setUniformMatrix4fv("world",        world_matrix);
     shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
-    shader->setUniformMatrix4fv("viewProj",     projection_matrix * view_matrix);
+    shader->setUniformMatrix4fv("viewProj",     projection_matrix * camera->getViewMatrix());
 
-    shader->setUniform3fv("cam_pos", cam_position);
+    shader->setUniform3fv("cam_pos", camera->getCamPosition());
 
     texture = new Texture();
 	texture->load("res/models/alliance.png");
 	texture->bind();
+    
 
     return true;
 }
@@ -113,6 +152,8 @@ void render(float time)
 
     shader->setUniformMatrix4fv("world", world_matrix);
     shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
+    shader->setUniformMatrix4fv("viewProj",     projection_matrix * camera->getViewMatrix());
+    shader->setUniform3fv("cam_pos", camera->getCamPosition());
 
     shader->apply();
     texture->bind();
@@ -122,15 +163,17 @@ void render(float time)
 void update()
 {
     float startTime = static_cast<float>(glfwGetTime());
-    float newTime  = 0.0f;
+    float elapsed  = 1.0f;
     float gameTime = 0.0f;
-
+    float frameStart = startTime;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Update game time value */
-        newTime  = static_cast<float>(glfwGetTime());
-        gameTime = newTime - startTime;
+        float deltaTime = static_cast<float>(glfwGetTime()) - frameStart;
+        frameStart = static_cast<float>(glfwGetTime());
+        gameTime = frameStart - startTime;
+
+		processInput(window, deltaTime);
 
         /* Render here */
         render(gameTime);
