@@ -45,7 +45,10 @@ public:
 		updateCameraVectors();
 	}
 
-    ~Camera();
+	~Camera()
+	{
+
+	};
 
 	glm::mat4 getViewMatrix()
 	{

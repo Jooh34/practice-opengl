@@ -30,11 +30,13 @@ Camera* camera = nullptr;
 glm::mat4 model_matrix      = glm::mat4(1.0f);
 glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 10.0f);
 
+unsigned int cubeVAO;
+
 void processInput(GLFWwindow* window, float deltaTime)
 {
-    if (camera)
-    {
-        camera->processInput(window, deltaTime);
+if (camera)
+{
+    camera->processInput(window, deltaTime);
     }
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -122,25 +124,84 @@ int init()
 
 int loadContent()
 {
-    camera = new Camera(glm::vec3(0.0f, 0.0f, 10.f), glm::vec3(0.0f, 1.0f, 0.0f));
-    mesh = new Model("res/models/alliance.obj");
+    camera = new Camera(glm::vec3(0.0f, 0.0f, 3.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     /* Create and apply basic shader */
-    shader = new Shader("Basic.vert", "Basic.frag");
+    shader = new Shader("ch07_01.vert", "ch07_01.frag");
     shader->apply();
 
 	shader->setUniformMatrix4fv("modelMatrix", model_matrix);
-	shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(model_matrix))));
 	shader->setUniformMatrix4fv("viewMatrix", camera->getViewMatrix());
 	shader->setUniformMatrix4fv("projectionMatrix", projection_matrix);
 
-    shader->setUniform3fv("cam_pos", camera->getCamPosition());
+    float vertices[] = {
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
 
-    texture = new Texture();
-	texture->load("res/models/alliance.png");
-	texture->bind();
-    
+        -0.5f, -0.5f,  0.5f, 
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f, 
 
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
+
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f, -0.5f,  0.5f,  
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+
+        -0.5f,  0.5f, -0.5f, 
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+    };
+
+    // first, configure the cube's VAO (and VBO)
+    unsigned int VBO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &VBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(cubeVAO);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
+
+    // we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
     return true;
 }
 
@@ -151,14 +212,18 @@ void render(float time)
     model_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
     shader->setUniformMatrix4fv("modelMatrix", model_matrix);
-    shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(model_matrix))));
-    shader->setUniformMatrix4fv("viewMatrix",     camera->getViewMatrix());
-    shader->setUniformMatrix4fv("projectionMatrix",     projection_matrix);
-    shader->setUniform3fv("cam_pos", camera->getCamPosition());
+    shader->setUniformMatrix4fv("viewMatrix", camera->getViewMatrix());
+    shader->setUniformMatrix4fv("projectionMatrix", projection_matrix);
+    
+    // for light
+    shader->setUniform3fv("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+    shader->setUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
     shader->apply();
-    texture->bind();
-    mesh->Draw();
+
+    // render the cube
+    glBindVertexArray(cubeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void update()

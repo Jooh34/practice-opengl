@@ -122,7 +122,7 @@ int init()
 
 int loadContent()
 {
-    camera = new Camera(glm::vec3(0.0f, 0.0f, 1.f), glm::vec3(0.0f, 1.0f, 0.0f));
+    camera = new Camera(glm::vec3(0.0f, 0.0f, 10.f), glm::vec3(0.0f, 1.0f, 0.0f));
     mesh = new Model("res/models/alliance.obj");
 
     texture = new Texture();
