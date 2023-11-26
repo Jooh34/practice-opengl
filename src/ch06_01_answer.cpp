@@ -125,21 +125,17 @@ int loadContent()
     camera = new Camera(glm::vec3(0.0f, 0.0f, 1.f), glm::vec3(0.0f, 1.0f, 0.0f));
     mesh = new Model("res/models/alliance.obj");
 
-    /* Create and apply basic shader */
-    shader = new Shader("Basic.vert", "Basic.frag");
-    shader->apply();
-
-	shader->setUniformMatrix4fv("modelMatrix", model_matrix);
-	shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(model_matrix))));
-	shader->setUniformMatrix4fv("viewMatrix", camera->getViewMatrix());
-	shader->setUniformMatrix4fv("projectionMatrix", projection_matrix);
-
-    shader->setUniform3fv("cam_pos", camera->getCamPosition());
-
     texture = new Texture();
 	texture->load("res/models/alliance.png");
 	texture->bind();
-    
+
+    /* Create and apply basic shader */
+    shader = new Shader("ch06_01.vert", "ch06_01.frag");
+    shader->apply();
+
+	shader->setUniformMatrix4fv("modelMatrix", model_matrix);
+	shader->setUniformMatrix4fv("viewMatrix", camera->getViewMatrix());
+	shader->setUniformMatrix4fv("projectionMatrix", projection_matrix);
 
     return true;
 }
@@ -151,10 +147,8 @@ void render(float time)
     model_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
     shader->setUniformMatrix4fv("modelMatrix", model_matrix);
-    shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(model_matrix))));
     shader->setUniformMatrix4fv("viewMatrix",     camera->getViewMatrix());
     shader->setUniformMatrix4fv("projectionMatrix",     projection_matrix);
-    shader->setUniform3fv("cam_pos", camera->getCamPosition());
 
     shader->apply();
     texture->bind();
