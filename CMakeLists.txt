@@ -38,6 +38,7 @@ add_executable(ch04_01_answer ${CMAKE_SOURCE_DIR}/src/ch04_01_answer.cpp)
 add_executable(ch06_01_answer ${CMAKE_SOURCE_DIR}/src/ch06_01_answer.cpp)
 add_executable(ch07_01_answer ${CMAKE_SOURCE_DIR}/src/ch07_01_answer.cpp)
 add_executable(ch07_02_answer ${CMAKE_SOURCE_DIR}/src/ch07_02_answer.cpp)
+add_executable(ch07_03_answer ${CMAKE_SOURCE_DIR}/src/ch07_03_answer.cpp)
 
 
 # We need a CMAKE_DIR with some code to find external dependencies
@@ -95,6 +96,7 @@ target_link_libraries(ch04_01_answer COMMON ${LIBS})
 target_link_libraries(ch06_01_answer COMMON ${LIBS})
 target_link_libraries(ch07_01_answer COMMON ${LIBS})
 target_link_libraries(ch07_02_answer COMMON ${LIBS})
+target_link_libraries(ch07_03_answer COMMON ${LIBS})
 
 # Create virtual folders to make it look nicer in VS
 if(MSVC_IDE)
