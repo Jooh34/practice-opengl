@@ -9,12 +9,16 @@ link_directories(${CMAKE_SOURCE_DIR}/lib)
 # Add source files
 file(GLOB_RECURSE SOURCE_FILES 
 	${CMAKE_SOURCE_DIR}/src/rendering/*.c
-	${CMAKE_SOURCE_DIR}/src/rendering/*.cpp)
+	${CMAKE_SOURCE_DIR}/src/rendering/*.cpp
+	${CMAKE_SOURCE_DIR}/src/imgui/*.c
+	${CMAKE_SOURCE_DIR}/src/imgui/*.cpp)
 	
 # Add header files
 file(GLOB_RECURSE HEADER_FILES 
 	${CMAKE_SOURCE_DIR}/src/rendering/*.h
-	${CMAKE_SOURCE_DIR}/src/rendering/*.hpp)
+	${CMAKE_SOURCE_DIR}/src/rendering/*.hpp
+	${CMAKE_SOURCE_DIR}/src/imgui/*.h
+	${CMAKE_SOURCE_DIR}/src/imgui/*.hpp)
 
 # Configure assets header file
 configure_file(src/helpers/RootDir.h.in src/helpers/RootDir.h)
@@ -39,6 +43,7 @@ add_executable(ch06_01_answer ${CMAKE_SOURCE_DIR}/src/ch06_01_answer.cpp)
 add_executable(ch07_01_answer ${CMAKE_SOURCE_DIR}/src/ch07_01_answer.cpp)
 add_executable(ch07_02_answer ${CMAKE_SOURCE_DIR}/src/ch07_02_answer.cpp)
 add_executable(ch07_03_answer ${CMAKE_SOURCE_DIR}/src/ch07_03_answer.cpp)
+add_executable(ch07_04_answer ${CMAKE_SOURCE_DIR}/src/ch07_04_answer.cpp)
 
 
 # We need a CMAKE_DIR with some code to find external dependencies
@@ -97,6 +102,7 @@ target_link_libraries(ch06_01_answer COMMON ${LIBS})
 target_link_libraries(ch07_01_answer COMMON ${LIBS})
 target_link_libraries(ch07_02_answer COMMON ${LIBS})
 target_link_libraries(ch07_03_answer COMMON ${LIBS})
+target_link_libraries(ch07_04_answer COMMON ${LIBS})
 
 # Create virtual folders to make it look nicer in VS
 if(MSVC_IDE)
