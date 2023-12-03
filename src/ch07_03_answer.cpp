@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) 2018 Tomasz Ga�aj
+ * Copyright (C) 2022 Jooh
  **/
 
 #include <iostream>

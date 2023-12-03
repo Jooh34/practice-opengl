@@ -29,7 +29,9 @@ bool cursor_enabled = true;
 
 Model   * mesh    = nullptr;
 Shader  * shader  = nullptr;
-
+Shader  * lightcube_shader  = nullptr;
+Texture* diffuse_texture = nullptr;
+Texture* specular_texture = nullptr;
 Camera* camera = nullptr;
 
 glm::mat4 model_matrix      = glm::mat4(1.0f);
@@ -164,14 +166,91 @@ int loadContent()
 {
     camera = new Camera(glm::vec3(0.0f, 0.0f, 3.f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    /* Create and apply basic shader */
-    shader = new Shader("ch07_04.vert", "ch07_04.frag");
-    shader->apply();
+	// Diffuse and Specular Texture Bind
+	diffuse_texture = new Texture();
+	diffuse_texture->load("res/models/container_diffuse.png");
+	diffuse_texture->bind(0);
 
+	specular_texture = new Texture();
+	specular_texture->load("res/models/container_specular.png");
+	specular_texture->bind(1);
+
+    /* Create and apply basic shader */
+    shader = new Shader("ch07_05.vert", "ch07_05.frag");
+    shader->apply();
+	shader->setUniform1i("material.diffuse", 0);
+	shader->setUniform1i("material.specular", 1);
+
+    lightcube_shader = new Shader("lightcube.vert", "lightcube.frag");
+	lightcube_shader->apply();
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
 	float vertices[] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+	};
+
+	// first, configure the cube's VAO (and VBO)
+	unsigned int VBO;
+	glGenVertexArrays(1, &cubeVAO);
+	glGenBuffers(1, &VBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindVertexArray(cubeVAO);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+
+	// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+	float lightcube_vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -214,29 +293,16 @@ int loadContent()
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
-	// first, configure the cube's VAO (and VBO)
-	unsigned int VBO;
-	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(1, &VBO);
+	unsigned int lightCubeVBO;
+	glGenBuffers(1, &lightCubeVBO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, lightCubeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(lightcube_vertices), lightcube_vertices, GL_STATIC_DRAW);
 
-	glBindVertexArray(cubeVAO);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-
-	// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
 	glGenVertexArrays(1, &lightCubeVAO);
 	glBindVertexArray(lightCubeVAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, lightCubeVBO);
 
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
@@ -253,21 +319,17 @@ void render(float time)
 	// -------------
 	// IMGUI
 
-	static float ambient[3] = { 1.0f, 0.5f, 0.31f };
-	static float diffuse[3] = { 1.0f, 0.5f, 0.31f };
-	static float specular[3] = { 0.5f, 0.5f, 0.5f };
 	static float shininess = 32.f;
 
-	ImGui::ColorEdit3("ambient", ambient);
-	ImGui::ColorEdit3("diffuse", diffuse);
-	ImGui::ColorEdit3("specular", specular);
 	ImGui::SliderFloat("shininess", &shininess, 0, 32.f, "%.3f");
 	// --------------------
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::vec3 lightPos = glm::vec3(1.f, 0.5f, 1.f);
     model_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
-
+	
+	diffuse_texture->bind(0);
+	specular_texture->bind(1);
     shader->setUniformMatrix4fv("modelMatrix", model_matrix);
     shader->setUniformMatrix4fv("viewMatrix", camera->getViewMatrix());
     shader->setUniformMatrix4fv("projectionMatrix", projection_matrix);
@@ -278,9 +340,6 @@ void render(float time)
 	shader->setUniform3fv("lightPos", lightPos);
 	
 	// for material
-	shader->setUniform3fv("material.ambient", glm::vec3(ambient[0], ambient[1], ambient[2]));
-	shader->setUniform3fv("material.diffuse", glm::vec3(diffuse[0], diffuse[1], diffuse[2]));
-	shader->setUniform3fv("material.specular", glm::vec3(specular[0], specular[1], specular[2]));
 	shader->setUniform1f("material.shininess", shininess);
     shader->apply();
 
@@ -292,21 +351,11 @@ void render(float time)
 	model_matrix = glm::mat4(1.0f);
 	model_matrix = glm::translate(model_matrix, lightPos);
 	model_matrix = glm::scale(model_matrix, glm::vec3(0.2f)); // a smaller cube
-	shader->setUniformMatrix4fv("modelMatrix", model_matrix);
-	shader->setUniformMatrix4fv("viewMatrix", camera->getViewMatrix());
-	shader->setUniformMatrix4fv("projectionMatrix", projection_matrix);
+	lightcube_shader->setUniformMatrix4fv("modelMatrix", model_matrix);
+	lightcube_shader->setUniformMatrix4fv("viewMatrix", camera->getViewMatrix());
+	lightcube_shader->setUniformMatrix4fv("projectionMatrix", projection_matrix);
 
-	// for lightCbue
-	shader->setUniform3fv("cameraPos", camera->getCamPosition());
-	shader->setUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	shader->setUniform3fv("lightPos", lightPos);
-
-	shader->setUniform3fv("material.ambient", glm::vec3(1,1,1));
-	shader->setUniform3fv("material.diffuse", glm::vec3(1,1,1));
-	shader->setUniform3fv("material.specular", glm::vec3(1,1,1));
-	shader->setUniform1f("material.shininess", 1);
-
-	shader->apply();
+	lightcube_shader->apply();
 
 	glBindVertexArray(lightCubeVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -360,7 +409,8 @@ int main(void)
 
     delete mesh;
     delete shader;
-    delete texture;
+    delete diffuse_texture;
+    delete specular_texture;
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
