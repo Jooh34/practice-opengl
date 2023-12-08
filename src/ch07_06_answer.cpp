@@ -375,8 +375,17 @@ void render(float time)
 
 	ImGui::SliderFloat("shininess", &shininess, 0, 32.f, "%.3f");
 	static glm::vec3 light_position{1.0f, 1.0f, 1.0f};
+	static glm::vec3 light_ambient{1.0f, 1.0f, 1.0f};
+	static glm::vec3 light_diffuse{1.0f, 1.0f, 1.0f};
+	static glm::vec3 light_specular{1.0f, 1.0f, 1.0f};
 	ImGui::SliderFloat3("light_position", (float*)&light_position, -5.0f, 5.0f);
+	ImGui::SliderFloat3("light_ambient", (float*)&light_ambient, 0, 1);
+	ImGui::SliderFloat3("light_diffuse", (float*)&light_diffuse, 0, 1);
+	ImGui::SliderFloat3("light_specular", (float*)&light_specular, 0, 1);
 	light.position = glm::vec4(light_position, light.position[3]);
+	light.ambient = light_ambient;
+	light.diffuse = light_diffuse;
+	light.specular = light_specular;
 	
 	// --------------------
 
