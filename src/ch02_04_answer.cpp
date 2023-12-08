@@ -7,7 +7,7 @@ const int WINDOW_WIDTH  = 1024;
 const int WINDOW_HEIGHT = 768;
 
 unsigned int shaderProgram;
-unsigned int VAO;
+unsigned int VAO, VBO, EBO;
 
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -64,24 +64,45 @@ void render()
 	// 삼각형 그리기
 	glUseProgram(shaderProgram); // 어떤 셰이더 프로그램 사용할지 선택
 	glBindVertexArray(VAO); // 버텍스 어레이 선택
-	glDrawArrays(GL_TRIANGLES, 0, 3); // 드로우 콜
+
+	//glDrawArrays(GL_TRIANGLES, 0, 6); 
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // DrawArrays 와는 다르게 IndexBuffer를 사용한 glDrawElements 사용
 }
 
 void update()
 {
 	float vertices[] = {
-		// first triangle
-		-0.5f, -0.5f, 0.0f,  // left 
-		0.5f, -0.5f, 0.0f,  // right
-		0.0f, 0.5f, 0.0f,  // top 
+		 0.5f,  0.5f, 0.0f,  // top right
+		 0.5f, -0.5f, 0.0f,  // bottom right
+		-0.5f, -0.5f, 0.0f,  // bottom left
+		-0.5f,  0.5f, 0.0f   // top left 
+	};
+	unsigned int indices[] = {  // note that we start from 0!
+		0, 1, 3,  // first Triangle
+		1, 2, 3   // second Triangle
 	};
 
-	unsigned int VBO;
+	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+	glBindVertexArray(VAO);
 
 	// GL_ARRAY_BUFFER : 버텍스 특성을 담는 버퍼.
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // (종류, 버퍼크기, 포인터 주소, 옵션)
+	
+	// Index 정보를 담는 EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	// Vertex Attribute 정의
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// BindBuffer 해제
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
 
 
 	// 파일 로드 형식으로 변경 예정
@@ -118,17 +139,6 @@ void update()
 	glLinkProgram(shaderProgram);
 
 	glUseProgram(shaderProgram);
-
-	// Vertex Array Object 만들고, 바인딩
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	// Vertex attributes pointer 세팅하기
-	// => 아까 세팅한 VBO를 어떻게 해석할지 정의.
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
