@@ -14,10 +14,12 @@
 #include "rendering/Texture.h"
 #include "rendering/Model.h"
 #include "rendering/Camera.h"
+#include "rendering/Light.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
+
 
 GLFWwindow* window;
 const int WINDOW_WIDTH  = 1920;
@@ -35,7 +37,7 @@ Texture* specular_texture = nullptr;
 Camera* camera = nullptr;
 
 glm::mat4 model_matrix      = glm::mat4(1.0f);
-glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 10.0f);
+glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 100.0f);
 
 unsigned int cubeVAO, lightCubeVAO;
 
@@ -175,7 +177,7 @@ int loadContent()
 	specular_texture->bind(1);
 
     /* Create and apply basic shader */
-    shader = new Shader("ch07_05.vert", "ch07_05.frag");
+    shader = new Shader("ch07_06.vert", "ch07_06.frag");
     shader->apply();
 	shader->setUniform1i("material.diffuse", 0);
 	shader->setUniform1i("material.specular", 1);
@@ -313,11 +315,11 @@ int loadContent()
     return true;
 }
 
-void renderCube(float time, const glm::vec3& objectPos, const glm::vec3 lightPos, float shininess)
+void renderCube(float time, const glm::vec3& objectPos, const Light& light, float shininess)
 {
 	glm::mat4 m = glm::mat4(1.f);
 	m = glm::translate(m, objectPos);
-    m = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
+    m = glm::rotate(m, time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
 	diffuse_texture->bind(0);
 	specular_texture->bind(1);
@@ -327,8 +329,14 @@ void renderCube(float time, const glm::vec3& objectPos, const glm::vec3 lightPos
 
 	// for light
 	shader->setUniform3fv("cameraPos", camera->getCamPosition());
-	shader->setUniform3fv("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	shader->setUniform3fv("lightPos", lightPos);
+
+	shader->setUniform4fv("light.position", light.position);
+	shader->setUniform3fv("light.ambient", light.ambient);
+	shader->setUniform3fv("light.diffuse", light.diffuse);
+	shader->setUniform3fv("light.specular", light.specular);
+	shader->setUniform1f("light.constant", light.constant);
+	shader->setUniform1f("light.linear", light.linear);
+	shader->setUniform1f("light.quadratic", light.quadratic);
 
 	// for material
 	shader->setUniform1f("material.shininess", shininess);
@@ -356,19 +364,43 @@ void renderLightCube(const glm::vec3 &pos)
 
 void render(float time)
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//Light light(glm::vec4(-0.2f, -1.0f, -0.3f, 0));
+	Light light(glm::vec4(1.f, 1.f, 1.f, 0));
+
 	// -------------
 	// IMGUI
 
 	static float shininess = 32.f;
 
 	ImGui::SliderFloat("shininess", &shininess, 0, 32.f, "%.3f");
+	static glm::vec3 light_position{1.0f, 1.0f, 1.0f};
+	ImGui::SliderFloat3("light_position", (float*)&light_position, -5.0f, 5.0f);
+	light.position = glm::vec4(light_position, light.position[3]);
+	
 	// --------------------
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glm::vec3 lightPos = glm::vec3(1.f, 0.5f, 1.f);
+	glm::vec3 cubePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
 
-	renderCube(time, glm::vec3(0,0,0), lightPos, shininess);
-	renderLightCube(lightPos);
+	for (const auto& cubePos : cubePositions)
+	{
+		renderCube(time, cubePos, light, shininess);
+	}
+	
+	if (light.position[3] == 1) {
+		renderLightCube(light.position);
+	}
 }
 
 void update()
