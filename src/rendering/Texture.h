@@ -13,6 +13,7 @@ public:
     ~Texture();
 
     bool load(const std::string & file_name);
+    bool loadDepthMap(int width, int height);
     
     void bind(int index = 0) const
     {
@@ -23,8 +24,18 @@ public:
         }
     }
 
+    void bindFrameBuffer() const
+    {
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glViewport(0, 0, ShadowWidth, ShadowHeight);
+    }
+
     bool use_linear;
 
 private:
+    float ShadowWidth;
+	float ShadowHeight;
+
     GLuint to_id;
+    unsigned int FBO = 0;
 };
