@@ -2,7 +2,6 @@
 
 out vec4 FragColor;
 
-in vec3 dir2camera;
 in vec3 o_position;
 in vec3 o_normal;
 in vec2 o_texcoord;
@@ -27,6 +26,8 @@ struct Light {
 
 uniform Material material;
 uniform Light light;
+
+uniform vec3 cameraPos;
 
 vec3 getAmbient(vec3 light_color) {
     return light_color;
@@ -61,6 +62,8 @@ void main()
     vec3 ambient  = vec3(texture(material.diffuse, o_texcoord));
     vec3 diffuse  = ambient;  
     vec3 specular = vec3(texture(material.specular, o_texcoord));
+
+	vec3 dir2camera = normalize(cameraPos - o_position);
 
     vec3 dir2light;
     if (light.position.w == 0) { // directional light
